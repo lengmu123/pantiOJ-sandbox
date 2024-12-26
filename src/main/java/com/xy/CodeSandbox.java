@@ -1,8 +1,8 @@
 package com.xy;
 
 
-import com.xy.mode.ExacuteCodeRequest;
-import com.xy.mode.ExacuteCodeResponse;
+import com.xy.mode.ExecuteCodeRequest;
+import com.xy.mode.ExecuteCodeResponse;
 
 /**
  * 代码沙箱接口定义
@@ -13,5 +13,5 @@ public interface CodeSandbox {
      * @param request
      * @return
      */
-    ExacuteCodeResponse executeCode(ExacuteCodeRequest request);
+    ExecuteCodeResponse executeCode(ExecuteCodeRequest request);
 }

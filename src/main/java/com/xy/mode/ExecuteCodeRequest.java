@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExacuteCodeRequest {
+public class ExecuteCodeRequest {
     private List<String> inputList;
 
     private String code;
