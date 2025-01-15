@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExecuteCodeResponse {
+public class ExacuteCodeResponse {
 
     private List<String> outputList;
     /**
@@ -26,5 +26,4 @@ public class ExecuteCodeResponse {
      * 判题信息
      */
     private JudgeInfo judgeInfo;
-
 }

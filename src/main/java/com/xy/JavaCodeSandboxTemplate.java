@@ -11,6 +11,7 @@ import com.xy.mode.JudgeInfo;
 import com.xy.security.DenySecurityManager;
 import com.xy.utils.ProcessUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Slf4j
+@Component
 public abstract class JavaCodeSandboxTemplate implements CodeSandbox{
 
     private static final String GLOBAL_CODE_DIR_NAME = "tmpCode";
@@ -178,7 +180,7 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox{
         exacuteCodeResponse.setOutputList(outputList);
         JudgeInfo judgeInfo = new JudgeInfo();
         judgeInfo.setTime(maxTime);
-        //        judgeInfo.setMemory();
+//        judgeInfo.setMemory();
 
         exacuteCodeResponse.setJudgeInfo(judgeInfo);
         return exacuteCodeResponse;
