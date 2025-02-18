@@ -16,10 +16,9 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -30,13 +29,13 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox{
 
     private static final long TIME_OUT = 5000l;
 
-    private static final String SECURITY_MANAGER_PATH = "D:\\xuexiDaima\\xyoj-code-sandbox\\src\\main\\resources\\security";
+   /* private static final String SECURITY_MANAGER_PATH = "D:\\xuexiDaima\\xyoj-code-sandbox\\src\\main\\resources\\security";
 
     private static final String SECURITY_MANAGER_CLASS_NAME = "DefaultSecurityManager";
-
+*/
 
     @Override
-    public ExecuteCodeResponse executeCode(ExecuteCodeRequest exacuteCodeRequest) {
+    public ExecuteCodeResponse executeCode(ExecuteCodeRequest exacuteCodeRequest) throws IOException {
 //        System.setSecurityManager(new DenySecurityManager());
 
         List<String> inputList = exacuteCodeRequest.getInputList();
@@ -63,10 +62,10 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox{
         ExecuteCodeResponse outPutResponse = getOutPutResponse(executeMessageList);
 
         //5、文件清理
-        boolean del = deleteFile(userCodeFile);
-        if (!del){
-            log.error("删除失败，userCodeFilePath={}",userCodeFile.getAbsolutePath());
-        }
+//        boolean del = deleteFile(userCodeFile);
+//        if (!del){
+//            log.error("删除失败，userCodeFilePath={}",userCodeFile.getAbsolutePath());
+//        }
 
 
         return outPutResponse;
@@ -101,10 +100,11 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox{
         try {
             Process compileProcess = Runtime.getRuntime().exec(compileCmd);
             ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(compileProcess, "编译");
-//            System.out.println(executeMessage);
+            System.out.println(executeMessage);
             if (executeMessage.getExitValue() != 0){
                 throw new RuntimeException("编译错误！");
             }
+            System.out.println("编译成功！！！！！！！！");
             return executeMessage;
         } catch (Exception e) {
 //            return  getErrorResponse(e);
@@ -118,7 +118,7 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox{
      * @param inputList
      * @return
      */
-    public List<ExecuteMessage> runFile(File userCodeFile,List<String> inputList){
+    public List<ExecuteMessage> runFile(File userCodeFile,List<String> inputList) throws IOException {
         String userCodeParentPath = userCodeFile.getParentFile().getAbsolutePath();
         List<ExecuteMessage> executeMessageList = new ArrayList<>();
 
@@ -142,6 +142,7 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox{
 //                ExecuteMessage executeMessage = ProcessUtils.runInteractProcessAndGetMessage(runProcess, "运行",inputArgs); //scanner输入
 
                 System.out.println(executeMessage);
+                System.out.println("消息");
                 executeMessageList.add(executeMessage);
             } catch (Exception e) {
                 throw new RuntimeException("程序执行异常",e);
@@ -180,6 +181,20 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox{
         exacuteCodeResponse.setOutputList(outputList);
         JudgeInfo judgeInfo = new JudgeInfo();
         judgeInfo.setTime(maxTime);
+
+        System.out.println("这里");
+        System.out.println(judgeInfo.toString());
+        System.out.println(executeMessageList.get(0).getMemory());
+        System.out.println("这里");
+//        judgeInfo.setMemoryList();
+//        for (ExecuteMessage executeMessage : executeMessageList) {
+//            executeMessage.getMemory();
+//
+//        }
+  /*      List<Long> memoryList  = executeMessageList.stream()
+                .map(ExecuteMessage::getMemory)
+                .collect(Collectors.toList());
+        judgeInfo.setMemoryList(memoryList);*/
 //        judgeInfo.setMemory();
 
         exacuteCodeResponse.setJudgeInfo(judgeInfo);

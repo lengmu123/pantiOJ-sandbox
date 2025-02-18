@@ -10,17 +10,20 @@ import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.xy.mode.ExecuteCodeRequest;
 import com.xy.mode.ExecuteCodeResponse;
 import com.xy.mode.ExecuteMessage;
 import com.xy.mode.JudgeInfo;
 import com.xy.utils.ProcessUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,15 +33,15 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class JavaDockerCodeSandboxTemplate extends JavaCodeSandboxTemplate {
 
-    private static final String GLOBAL_CODE_DIR_NAME = "tmpCode";
+/*    private static final String GLOBAL_CODE_DIR_NAME = "tmpCode";
 
-    private static final String GLOBAL_JAVA_CLASS_NAME = "Main.java";
+    private static final String GLOBAL_JAVA_CLASS_NAME = "Main.java";*/
 
     private static final long TIME_OUT = 5000L;
 
     private static final Boolean FIRST_INIT = true;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         JavaDockerCodeSandboxTemplate javaNativeCodeSandbox = new JavaDockerCodeSandboxTemplate();
         ExecuteCodeRequest executeCodeRequest = new ExecuteCodeRequest();
         executeCodeRequest.setInputList(Arrays.asList("1 2", "1 3"));
@@ -51,6 +54,23 @@ public class JavaDockerCodeSandboxTemplate extends JavaCodeSandboxTemplate {
         System.out.println(executeCodeResponse);
     }
 
+    @Override
+    public ExecuteMessage compileFile(File userCodeFile){
+        String compileCmd = String.format("/www/server/java/jdk1.8.0_371/bin/javac -encoding utf-8 %s", userCodeFile.getAbsolutePath());
+        try {
+            Process compileProcess = Runtime.getRuntime().exec(compileCmd);
+            ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(compileProcess, "编译");
+            System.out.println(executeMessage);
+            if (executeMessage.getExitValue() != 0){
+                throw new RuntimeException("编译错误！");
+            }
+            System.out.println("编译成功！！！！！！！！");
+            return executeMessage;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * 3、创建容器，把文件复制到容器内
      * @param userCodeFile
@@ -58,12 +78,17 @@ public class JavaDockerCodeSandboxTemplate extends JavaCodeSandboxTemplate {
      * @return
      */
     @Override
-    public List<ExecuteMessage> runFile(File userCodeFile, List<String> inputList) {
+    public List<ExecuteMessage> runFile(File userCodeFile, List<String> inputList) throws IOException {
         String userCodeParentPath = userCodeFile.getParentFile().getAbsolutePath();
         // 获取默认的 Docker Client
-        DockerClient dockerClient = DockerClientBuilder.getInstance().build();
-
-        // 拉取镜像
+//        DockerClient dockerClient = DockerClientBuilder.getInstance().build();
+        DockerClient dockerClient = DockerClientBuilder.getInstance()
+                .withDockerHttpClient(new ApacheDockerHttpClient.Builder()
+                        .dockerHost(URI.create("unix:///var/run/docker.sock"))
+                        .build())
+                .build();
+    try{
+        // 拉取jdk镜像
         String image = "openjdk:8-alpine";
         if (FIRST_INIT) {
             PullImageCmd pullImageCmd = dockerClient.pullImageCmd(image);
@@ -110,6 +135,8 @@ public class JavaDockerCodeSandboxTemplate extends JavaCodeSandboxTemplate {
         // 启动容器
         dockerClient.startContainerCmd(containerId).exec();
         // 执行命令并获取结果
+        String[] message =new String[1];
+        String[] errorMessage = new String[1];
         List<ExecuteMessage> executeMessageList = new ArrayList<>();
         for (String inputArgs : inputList) {
             StopWatch stopWatch = new StopWatch();
@@ -125,8 +152,8 @@ public class JavaDockerCodeSandboxTemplate extends JavaCodeSandboxTemplate {
             System.out.println("创建执行命令：" + execCreateCmdResponse);
 
             ExecuteMessage executeMessage = new ExecuteMessage();
-            final String[] message = {null};
-            final String[] errorMessage = {null};
+//            final String[] message = {null};
+//            final String[] errorMessage = {null};
             long time = 0L;
             // 判断是否超时
             final boolean[] timeout = {true};
@@ -190,7 +217,7 @@ public class JavaDockerCodeSandboxTemplate extends JavaCodeSandboxTemplate {
                 stopWatch.start();
                 dockerClient.execStartCmd(execId)
                         .exec(execStartResultCallback)
-                        .awaitCompletion(TIME_OUT, TimeUnit.MICROSECONDS);
+                        .awaitCompletion(TIME_OUT, TimeUnit.MILLISECONDS);
                 stopWatch.stop();
                 time = stopWatch.getLastTaskTimeMillis();
                 statsCmd.close();
@@ -198,13 +225,22 @@ public class JavaDockerCodeSandboxTemplate extends JavaCodeSandboxTemplate {
                 System.out.println("程序执行异常");
                 throw new RuntimeException(e);
             }
-            executeMessage.setMessage(message[0]);
-            executeMessage.setErrorMessage(errorMessage[0]);
+            System.out.println(Arrays.toString(message));
+            System.out.println("消息");
+            executeMessage.setMessage(StringUtils.join(message, " "));
+
+            executeMessage.setMessage(message[0] != null ? message[0] : "没有");
+            executeMessage.setErrorMessage(errorMessage[0] != null ? errorMessage[0] : "没有");
             executeMessage.setTime(time);
             executeMessage.setMemory(maxMemory[0]);
             executeMessageList.add(executeMessage);
         }
         return executeMessageList;
+    } finally {
+        if (dockerClient != null) {
+            dockerClient.close();
+        }
+    }
     }
 
 

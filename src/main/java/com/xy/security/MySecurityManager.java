@@ -8,7 +8,7 @@ public class MySecurityManager extends SecurityManager{
     @Override
     public void checkPermission(Permission perm) {
 
-//       super.checkPermission(perm);
+       super.checkPermission(perm);
     }
     //检查程序是否允许执行
     @Override
@@ -22,24 +22,24 @@ public class MySecurityManager extends SecurityManager{
         if (file.contains("hutool")){
             return;
         }
-//        throw new SecurityException("程序不允许读取"+file);
+        throw new SecurityException("程序不允许读取"+file);
     }
     //检查程序是否允许写入
     @Override
     public void checkWrite(String file) {
 
-//        throw new SecurityException("程序不允许写入"+file);
+        throw new SecurityException("程序不允许写入"+file);
     }
     //检查程序是否允许删除
     @Override
     public void checkDelete(String file) {
 
-//        throw new SecurityException("程序不允许删除"+file);
+        throw new SecurityException("程序不允许删除"+file);
     }
     //检查程序是否允许连接
     @Override
     public void checkConnect(String host, int port) {
 
-//        throw new SecurityException("程序不允许连接"+host+":"+port);
+        throw new SecurityException("程序不允许连接"+host+":"+port);
     }
 }

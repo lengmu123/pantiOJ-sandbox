@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @RestController()
 public class MainController {
@@ -22,6 +23,8 @@ public class MainController {
 
     @Resource
     private JavaDockerCodeSandbox javaDockerCodeSandbox;
+    @Resource
+    private JavaDockerCodeSandboxTemplate javaDockerCodeSandboxTemplate;
 
     //定义鉴权请求头和密钥
     private final static String AUTH_REQUEST_HEADER = "auth";
@@ -29,7 +32,7 @@ public class MainController {
 
     @GetMapping("/health")
     public String healthCheck(){
-        return "okk";
+        return "keyi";
     }
 
     /**
@@ -37,9 +40,9 @@ public class MainController {
      * @param executeCodeRequest
      * @return
      */
-    @PostMapping("/executeCode/yuan")
+    @PostMapping("/executeCode/jiu")
     ExecuteCodeResponse executeCodeYuan(@RequestBody  ExecuteCodeRequest executeCodeRequest, HttpServletRequest request,
-                                    HttpServletResponse response){
+                                    HttpServletResponse response) throws IOException {
         String authHeader = request.getHeader(AUTH_REQUEST_HEADER);
         if (!authHeader.equals(AUTH_REQUEST_SECRET)){
             response.setStatus(403);
@@ -54,7 +57,7 @@ public class MainController {
 
     @PostMapping("/executeCode")
     ExecuteCodeResponse executeCode(@RequestBody  ExecuteCodeRequest executeCodeRequest, HttpServletRequest request,
-                                    HttpServletResponse response){
+                                    HttpServletResponse response) throws IOException {
         String authHeader = request.getHeader(AUTH_REQUEST_HEADER);
         if (!authHeader.equals(AUTH_REQUEST_SECRET)){
             response.setStatus(403);
@@ -64,6 +67,6 @@ public class MainController {
             throw new RuntimeException("请求参数为空");
         }
 
-        return javaDockerCodeSandbox.executeCode(executeCodeRequest);
+        return javaDockerCodeSandboxTemplate.executeCode(executeCodeRequest);
     }
 }

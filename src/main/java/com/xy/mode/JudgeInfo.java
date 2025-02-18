@@ -2,6 +2,8 @@ package com.xy.mode;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 判题信息
  */
@@ -20,7 +22,7 @@ public class JudgeInfo {
      * 消耗时间(KB)
      */
     private Long time;
-   
+//    private List<Long> memoryList;
 
 
 }
